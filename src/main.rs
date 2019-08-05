@@ -4,7 +4,9 @@ use std::fs;
 use std::io::Read;
 use std::path::Path;
 
+mod n64;
 mod cpu;
+mod interconnect;
 
 fn main() {
     let matches = clap_app!(myapp =>
@@ -20,8 +22,10 @@ fn main() {
     let pif_buf = load_bin(Path::new(pif_path));
     println!("Value for ROM: {:x?}", file_buf);
     println!("Value for PIF: {:?}", pif_buf);
-    let mut cpu = cpu::Cpu::new();
-    cpu.power_on_reset();
+
+    let mut n64 = n64::N64::new();
+    n64.power_on_reset();
+    n64.run();
 }
 
 fn load_bin<P: AsRef<Path>>(path: P) -> Vec<u8> {

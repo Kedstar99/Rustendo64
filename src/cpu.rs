@@ -22,6 +22,10 @@ impl Cpu {
     pub fn power_on_reset(&mut self) {
         self.cp0.power_on_reset()
     }
+
+    pub fn run(&mut self) {
+
+    }
 }
 
 enum RegConfigEp {
