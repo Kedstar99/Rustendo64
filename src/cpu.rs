@@ -1,4 +1,6 @@
 
+use super::interconnect;
+
 //see Google drive for CPU spec
 #[derive(Default)]
 pub struct Cpu { 
@@ -12,6 +14,7 @@ pub struct Cpu {
     fcr32: u32,
 
     cp0:CP0,
+    interconnect: interconnect::Interconnect,
 }
 
 impl Cpu {
