@@ -1,20 +1,16 @@
 const RAM_SIZE: usize = 4 * 1024 * 1024;
 
 pub struct Interconnect {
+    pif_rom: Vec<u8>,
     ram: Vec<u16>
 }
 
-impl Default for Interconnect {
-    fn default() -> Self {
+impl Interconnect {
+    pub fn new(pif_rom: Vec<u8>) -> Self {
         Interconnect{
+            pif_rom: pif_rom,
             ram: vec![0; RAM_SIZE]
         }
-    }
-}
-
-impl Interconnect {
-    pub fn new() -> Self {
-        Interconnect::default()
     }
 
 }

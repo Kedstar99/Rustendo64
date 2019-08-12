@@ -3,14 +3,12 @@ use super::interconnect;
 
 pub struct N64{
     cpu: cpu::Cpu,
-    interconnect: interconnect::Interconnect
 }
 
 impl N64 {
-    pub fn new()-> Self {
+    pub fn new(pif_rom:Vec<u8>)-> Self {
         N64 {
-            cpu: cpu::Cpu::new(),
-            interconnect: interconnect::Interconnect::new()
+            cpu: cpu::Cpu::new(interconnect::Interconnect::new(pif_rom)),
         }
     }
 

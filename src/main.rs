@@ -23,7 +23,7 @@ fn main() {
     println!("Value for ROM: {:x?}", file_buf);
     println!("Value for PIF: {:?}", pif_buf);
 
-    let mut n64 = n64::N64::new();
+    let mut n64 = n64::N64::new(pif_buf);
     n64.power_on_reset();
     n64.run();
 }

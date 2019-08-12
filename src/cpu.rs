@@ -2,7 +2,6 @@
 use super::interconnect;
 
 //see Google drive for CPU spec
-#[derive(Default)]
 pub struct Cpu { 
     gpr: [u64; 32],
     fpr: [f64; 32],
@@ -18,8 +17,20 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new() -> Self {
-        Cpu::default()
+    pub fn new(interconnect:interconnect::Interconnect) -> Self {
+        Cpu {
+            gpr: [0; 32],
+            fpr: [0.0; 32],
+            pc: 0,
+            high: 0,
+            low: 0,
+            llbit: false,
+            fcr0: 0,
+            fcr32: 0,
+
+            cp0: CP0::default(),
+            interconnect: interconnect,
+        }
     }
 
     pub fn power_on_reset(&mut self) {
