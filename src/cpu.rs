@@ -38,6 +38,9 @@ impl Cpu {
     }
 
     pub fn run(&mut self) {
+        loop {
+
+        }
 
     }
 }
