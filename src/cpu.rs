@@ -34,12 +34,34 @@ impl Cpu {
     }
 
     pub fn power_on_reset(&mut self) {
-        self.cp0.power_on_reset()
+        self.cp0.power_on_reset();
+
+        //This value comes from n64maps.txt see tag 01 in my google doc for details.
+        self.pc = 0xffff_ffff_bfc0_0000;
     }
 
     pub fn run(&mut self) {
         loop {
+            let opcode = self.read_word(self.pc);
+        } 
 
+    }
+
+    fn read_word(&self, virt_addr: u64)->u32{
+        let phys_addr = self.virt_phys_addr_mapping(virt_addr);
+        self.interconnect.read_word(phys_addr as u32)
+    }
+
+    fn virt_phys_addr_mapping(&self, virt_addr: u64) -> u64 {
+        // see table 5-3 of processor VR4300 user manual
+        
+        let addr_bit_values = (virt_addr >> 29) & 0b111;
+
+        if addr_bit_values == 0b101 {
+            // kseg1 case   
+            virt_addr - 0xffff_ffff_a000_0000
+        } else {
+            panic!("Unrecognized virtual address: {:#x}", virt_addr)
         }
 
     }
