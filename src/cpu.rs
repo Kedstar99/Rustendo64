@@ -43,6 +43,7 @@ impl Cpu {
     pub fn run(&mut self) {
         loop {
             let opcode = self.read_word(self.pc);
+            panic!("Opcode: {:#x}", opcode)
         } 
 
     }
