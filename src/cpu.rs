@@ -1,7 +1,9 @@
 
 use super::interconnect;
+use std::fmt;
 
 //see Google drive for CPU spec
+#[derive(Debug)]
 pub struct Cpu { 
     gpr: [u64; 32],
     fpr: [f64; 32],
@@ -42,8 +44,7 @@ impl Cpu {
 
     pub fn run(&mut self) {
         loop {
-            let opcode = self.read_word(self.pc);
-            panic!("Opcode: {:#x}", opcode)
+            self.run_one_instruction()
         } 
 
     }
@@ -66,6 +67,26 @@ impl Cpu {
         }
 
     }
+
+    pub fn run_one_instruction(&mut self) {
+        let op_word = self.read_word(self.pc);
+        let op_code = (op_word >> 26) & 0b111111;
+        match op_code {
+            0b001111 => {
+                let imm = op_word & 0xffff;
+                let rt = (op_word >> 16) & 0b11111;
+                self.write_gpr(rt as usize, (imm << 16) as u64)
+            },
+            _ => panic!("Unrecognized Opcode: {:#b}", op_code)
+        }
+        self.pc += 4;
+    }
+
+    fn write_gpr(&mut self, index: usize, value: u64) {
+        if index != 0{
+            self.gpr[index] = value;
+        }
+    }
 }
 
 enum RegConfigEp {
@@ -78,8 +99,18 @@ impl Default for RegConfigEp {
     fn default() -> RegConfigEp {
         RegConfigEp::D
     }
-
 }
+
+impl fmt::Debug for RegConfigEp {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            RegConfigEp::D => write!(f, "D"),
+            RegConfigEp::DxxDxx => write!(f, "DxxDxx"),
+            RegConfigEp::RFU => write!(f, "RFU"),
+        }
+    }
+}
+
 
 enum RegConfigBe {
     LittleEndian,
@@ -92,8 +123,17 @@ impl Default for RegConfigBe {
     }
 }
 
+impl fmt::Debug for RegConfigBe {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            RegConfigBe::LittleEndian => write!(f, "LittleEndian"),
+            RegConfigBe::BigEndian => write!(f, "BigEndian"),
+        }
+    }
+}
 
-#[derive(Default)]
+
+#[derive(Default, Debug)]
 struct RegConfig {
     reg_config_ep: RegConfigEp,
     reg_config_be: RegConfigBe
@@ -108,7 +148,7 @@ impl RegConfig {
 
 
 // Coprocessor 0
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct CP0 {
     reg_config: RegConfig
 }

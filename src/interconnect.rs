@@ -1,3 +1,5 @@
+use std::fmt;
+
 const RAM_SIZE: usize = 4 * 1024 * 1024;
 
 pub struct Interconnect {
@@ -27,4 +29,11 @@ impl Interconnect {
         }
     }
 
+}
+
+impl fmt::Debug for Interconnect {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        //TODO figure out sensible way to print RAM
+        write!(f, "TODO implement format for interconnect.")
+    }
 }
