@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate clap;
+extern crate byteorder;
 use std::fs;
 use std::io::Read;
 use std::path::Path;
