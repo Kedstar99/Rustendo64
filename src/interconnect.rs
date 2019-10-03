@@ -1,3 +1,4 @@
+use super::byteorder::{BigEndian, ByteOrder};
 use std::fmt;
 
 const RAM_SIZE: usize = 4 * 1024 * 1024;
@@ -20,10 +21,7 @@ impl Interconnect {
             let rel_addr = addr - 0x1fc0_0000;
             // TODO check endiannness (replace with burntsushi byteorder)
             // currently reading as big endian
-            ((self.pif_rom[rel_addr as usize] as u32) << 24) |
-            ((self.pif_rom[(rel_addr + 1) as usize] as u32) << 16) |
-            ((self.pif_rom[(rel_addr + 2) as usize] as u32) << 8) |
-            (self.pif_rom[(rel_addr + 3) as usize] as u32)
+            BigEndian::read_u32(&self.pif_rom[rel_addr as usize..])
         } else {
             panic!("Unrecognized virtual address: {:#x}", addr)
         }
