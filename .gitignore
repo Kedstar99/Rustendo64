@@ -1,3 +1,4 @@
 /target
 **/*.rs.bk
 rustendo.code-workspace
+.vscode/tasks.json
