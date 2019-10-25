@@ -71,13 +71,21 @@ impl Cpu {
     pub fn run_one_instruction(&mut self) {
         let op_word = self.read_word(self.pc);
         let op_code = (op_word >> 26) & 0b111111;
+        let rt = (op_word >> 16) & 0b11111;
         match op_code {
             0b001111 => {
+                //LUI
                 let imm = op_word & 0xffff;
-                let rt = (op_word >> 16) & 0b11111;
                 self.write_gpr(rt as usize, (imm << 16) as u64)
             },
+            0b010000 => {
+                //MTC0
+                let rd = (op_word >> 11) & 0b11111;
+                let data = self.read_gpr(rt as usize);
+                self.cp0.write_cp0_reg(rd, data)
+            },
             _ => panic!("Unrecognized Opcode: {:#b}", op_code)
+
         }
         self.pc += 4;
     }
@@ -85,6 +93,13 @@ impl Cpu {
     fn write_gpr(&mut self, index: usize, value: u64) {
         if index != 0{
             self.gpr[index] = value;
+        }
+    }
+
+    fn read_gpr(&self, index: usize) -> u64 {
+        match index {
+            0 => 0,
+            _ => self.gpr[index]
         }
     }
 }
@@ -160,5 +175,9 @@ impl CP0 {
 
     fn power_on_reset(&mut self) {
         self.reg_config.power_on_reset();
+    }
+
+    fn write_cp0_reg(&mut self, index: u32, data: u64) {
+        panic!("TODO CP0 reg write! {:#?} {:#?}", index, data)
     }
 }

@@ -24,9 +24,11 @@ fn main() {
 
     let mut n64 = n64::N64::new(pif_buf);
     n64.power_on_reset();
-    println!("Before: {:#?}", &n64);
-    n64.run_one_instruction();
-    println!("After: {:#?}", &n64);
+    loop{
+        println!("N64: {:#?}", &n64);
+        n64.run_one_instruction();
+
+    }
 }
 
 fn load_bin<P: AsRef<Path>>(path: P) -> Vec<u8> {
