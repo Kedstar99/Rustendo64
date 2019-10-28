@@ -1,5 +1,5 @@
 
-use super::interconnect;
+use super::super::interconnect;
 use std::fmt;
 
 //see Google drive for CPU spec
@@ -178,6 +178,17 @@ impl CP0 {
     }
 
     fn write_cp0_reg(&mut self, index: u32, data: u64) {
-        panic!("TODO CP0 reg write! {:#?} {:#?}", index, data)
+        match index {
+            12 => {
+                //status register
+                self.write_status_reg(data)
+            },
+
+            _ => panic!("TODO CP0 reg write! {:#?} {:#?}", index, data)
+        }
+    }
+
+    fn write_status_reg(&mut self, data: u64) {
+        panic!("Status register write {:#?}", data)
     }
 }
