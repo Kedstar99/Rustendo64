@@ -1,6 +1,6 @@
 
 use super::super::interconnect;
-use std::fmt;
+use super::cp0;
 
 //see Google drive for CPU spec
 #[derive(Debug)]
@@ -14,7 +14,7 @@ pub struct Cpu {
     fcr0: u32,
     fcr32: u32,
 
-    cp0:CP0,
+    cp0:cp0::CP0,
     interconnect: interconnect::Interconnect,
 }
 
@@ -30,7 +30,7 @@ impl Cpu {
             fcr0: 0,
             fcr32: 0,
 
-            cp0: CP0::default(),
+            cp0: cp0::CP0::default(),
             interconnect: interconnect,
         }
     }
@@ -104,91 +104,3 @@ impl Cpu {
     }
 }
 
-enum RegConfigEp {
-    D,
-    DxxDxx,
-    RFU
-}
-
-impl Default for RegConfigEp {
-    fn default() -> RegConfigEp {
-        RegConfigEp::D
-    }
-}
-
-impl fmt::Debug for RegConfigEp {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            RegConfigEp::D => write!(f, "D"),
-            RegConfigEp::DxxDxx => write!(f, "DxxDxx"),
-            RegConfigEp::RFU => write!(f, "RFU"),
-        }
-    }
-}
-
-
-enum RegConfigBe {
-    LittleEndian,
-    BigEndian
-}
-
-impl Default for RegConfigBe {
-    fn default() -> RegConfigBe {
-        RegConfigBe::BigEndian
-    }
-}
-
-impl fmt::Debug for RegConfigBe {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            RegConfigBe::LittleEndian => write!(f, "LittleEndian"),
-            RegConfigBe::BigEndian => write!(f, "BigEndian"),
-        }
-    }
-}
-
-
-#[derive(Default, Debug)]
-struct RegConfig {
-    reg_config_ep: RegConfigEp,
-    reg_config_be: RegConfigBe
-}
-
-impl RegConfig {
-    fn power_on_reset(&mut self) {
-        self.reg_config_ep = RegConfigEp::D;
-        self.reg_config_be = RegConfigBe::BigEndian;
-    }
-}
-
-
-// Coprocessor 0
-#[derive(Default, Debug)]
-struct CP0 {
-    reg_config: RegConfig
-}
-
-impl CP0 {
-    fn new()->Self{
-        CP0::default()
-    }
-
-    fn power_on_reset(&mut self) {
-        self.reg_config.power_on_reset();
-    }
-
-    fn write_cp0_reg(&mut self, index: u32, data: u64) {
-        match index {
-            12 => {
-                //status register
-                self.write_status_reg(data)
-            },
-
-            _ => panic!("TODO CP0 reg write! {:#?} {:#?}", index, data)
-        }
-    }
-
-    fn write_status_reg(&mut self, data: u64) {
-        panic!("Status register write {:#?}", data)
-    }
-}
