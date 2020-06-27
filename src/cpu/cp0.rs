@@ -1,9 +1,11 @@
 use super::reg_config;
+use super::reg_status;
 
 // Coprocessor 0
 #[derive(Default, Debug)]
 pub struct CP0 {
-    reg_config: reg_config::RegConfig
+    reg_config: reg_config::RegConfig,
+    reg_status: reg_status::RegStatus,
 }
 
 impl CP0 {
@@ -27,6 +29,7 @@ impl CP0 {
     }
 
     pub fn write_status_reg(&mut self, data: u64) {
+        self.reg_status.write(data as u32);
         panic!("Status register write {:#?}", data)
     }
 }

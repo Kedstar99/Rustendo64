@@ -52,5 +52,23 @@ pub struct RegStatus {
     error_level: bool, //ERL
     exception_level: bool, //EXL
     global_interrupt: bool //IE
+}
 
+impl RegStatus {
+    pub fn write(&mut self, data: u32) {
+        self.coprocessor_usability[3] = data & 0x80000000 != 0;
+        self.coprocessor_usability[2] = data & 0x40000000 != 0;
+        self.coprocessor_usability[1] = data & 0x20000000 != 0;
+        self.coprocessor_usability[0] = data & 0x10000000 != 0;
+
+        self.low_power = data & 0x08000000 != 0;
+
+        self.additional_fp_regs = data & 0x04000000 != 0;
+
+        self.reverse_endian = data & 0x02000000 != 0;
+
+        self.diagnostic_status = data & 0x1ff0000;
+
+        
+    } 
 }
