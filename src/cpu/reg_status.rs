@@ -17,6 +17,29 @@ struct DiagnosticStatus {
     condition_bit: bool, //CH
 }
 
+impl DiagnosticStatus {
+    fn new(data: u32)->Self {
+        let panic_bit_twenty_three = data & 0x400000 == 1;
+        let panic_bit_nineteen = data & 0x40000 == 1;
+        if panic_bit_twenty_three || panic_bit_nineteen {
+            panic!("Detected anomalie in DiagnosticStatus. Bit 19 or 23 were set when they shouldn't have been. {:#b}", data);
+        }
+
+
+        DiagnosticStatus {
+            instruction_trace_support: data & 0x800000 != 0,
+            tlb_miss_gpe_vectors: match data & 0x200000 != 0 {
+                true => TLBGeneralExceptionVectorLocation::Bootstrap,
+                false => TLBGeneralExceptionVectorLocation::Normal
+            },
+            tlb_shutdown: data & 0x100000 != 0,
+            soft_reset_or_nmi_occured: data & 0x80000 != 0,
+            condition_bit: data & 0x20000 != 0,
+        }
+
+    }
+}
+
 #[derive(Debug, Default)]
 struct InterruptMask {
     enabled: bool,
@@ -67,7 +90,8 @@ impl RegStatus {
 
         self.reverse_endian = data & 0x02000000 != 0;
 
-        self.diagnostic_status = data & 0x1ff0000;
+        self.diagnostic_status = DiagnosticStatus::new(data);
+
 
         
     } 
