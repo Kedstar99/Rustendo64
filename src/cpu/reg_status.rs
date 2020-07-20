@@ -77,8 +77,8 @@ pub struct RegStatus {
     diagnostic_status: DiagnosticStatus, //DS
     interrupt_mask: InterruptMask, //IM
     kernel_mode_64bit_addr: bool, //KX
-    supervisor_mode__64bit_addr: bool, //SX
-    user_mode__64bit_addr: bool,  //UX
+    supervisor_mode_64bit_addr: bool, //SX
+    user_mode_64bit_addr: bool,  //UX
     mode: Mode, //KSU
     error_level: bool, //ERL
     exception_level: bool, //EXL
@@ -101,9 +101,9 @@ impl RegStatus {
         self.diagnostic_status.write(data);
         self.interrupt_mask.write(data);
         self.kernel_mode_64bit_addr = data & 0x80 != 0;
-        self.supervisor_mode__64bit_addr = data & 0x40 !=0;
-        self.user_mode__64bit_addr = data & 0x20 != 0;
-        self.mode = match((data & 0x18) >> 3) {
+        self.supervisor_mode_64bit_addr = data & 0x40 !=0;
+        self.user_mode_64bit_addr = data & 0x20 != 0;
+        self.mode = match (data & 0x18) >> 3 {
             0b00 => Mode::Kernel,
             0b01 => Mode::Supervisor,
             0b10 => Mode::User,
