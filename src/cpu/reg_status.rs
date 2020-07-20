@@ -18,24 +18,21 @@ struct DiagnosticStatus {
 }
 
 impl DiagnosticStatus {
-    fn new(data: u32)->Self {
+    fn write(&mut self, data: u32) {
         let panic_bit_twenty_three = data & 0x400000 == 1;
         let panic_bit_nineteen = data & 0x40000 == 1;
         if panic_bit_twenty_three || panic_bit_nineteen {
             panic!("Detected anomalie in DiagnosticStatus. Bit 19 or 23 were set when they shouldn't have been. {:#b}", data);
         }
-
-
-        DiagnosticStatus {
-            instruction_trace_support: data & 0x800000 != 0,
-            tlb_miss_gpe_vectors: match data & 0x200000 != 0 {
-                true => TLBGeneralExceptionVectorLocation::Bootstrap,
-                false => TLBGeneralExceptionVectorLocation::Normal
-            },
-            tlb_shutdown: data & 0x100000 != 0,
-            soft_reset_or_nmi_occured: data & 0x80000 != 0,
-            condition_bit: data & 0x20000 != 0,
-        }
+        
+        self.instruction_trace_support = data & 0x800000 != 0;
+        self.tlb_miss_gpe_vectors = match data & 0x200000 != 0 {
+            true => TLBGeneralExceptionVectorLocation::Bootstrap,
+            false => TLBGeneralExceptionVectorLocation::Normal
+        };
+        self.tlb_shutdown = data & 0x100000 != 0;
+        self.soft_reset_or_nmi_occured = data & 0x80000 != 0;
+        self.condition_bit = data & 0x20000 != 0;
 
     }
 }
@@ -43,9 +40,20 @@ impl DiagnosticStatus {
 #[derive(Debug, Default)]
 struct InterruptMask {
     enabled: bool,
-    timer_interrupt: bool, //IM(7)
     external_interrupts_or_write_requests: [bool; 5], //IM(6, 2)
     software_interrupt_cause_reg: [bool; 2] //IM(1, 0)
+}
+
+impl InterruptMask {
+    fn write(&mut self, data:u32) {
+        self.enabled = data & 0x8000 != 0;
+        for i in (0..5).rev() {
+            self.external_interrupts_or_write_requests[i] = data & (1 << (10 + i)) != 0;
+        }
+        for i in (0..2).rev() {
+            self.software_interrupt_cause_reg[i] = data & (1 << (8 + i)) != 0;
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -69,7 +77,7 @@ pub struct RegStatus {
     diagnostic_status: DiagnosticStatus, //DS
     interrupt_mask: InterruptMask, //IM
     kernel_mode_64bit_addr: bool, //KX
-    supervisor_mode__64bit_addr_: bool, //SX
+    supervisor_mode__64bit_addr: bool, //SX
     user_mode__64bit_addr: bool,  //UX
     mode: Mode, //KSU
     error_level: bool, //ERL
@@ -90,9 +98,20 @@ impl RegStatus {
 
         self.reverse_endian = data & 0x02000000 != 0;
 
-        self.diagnostic_status = DiagnosticStatus::new(data);
-
-
+        self.diagnostic_status.write(data);
+        self.interrupt_mask.write(data);
+        self.kernel_mode_64bit_addr = data & 0x80 != 0;
+        self.supervisor_mode__64bit_addr = data & 0x40 !=0;
+        self.user_mode__64bit_addr = data & 0x20 != 0;
+        self.mode = match((data & 0x18) >> 3) {
+            0b00 => Mode::Kernel,
+            0b01 => Mode::Supervisor,
+            0b10 => Mode::User,
+            _ => panic!("Unable to determine RegStatus mode")
+        };
+        self.error_level = data & 0x4 != 0;
+        self.exception_level = data & 0x2 != 0;
+        self.global_interrupt = data & 0x1 != 0;
         
     } 
 }
