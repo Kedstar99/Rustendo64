@@ -9,10 +9,6 @@ pub struct CP0 {
 }
 
 impl CP0 {
-    pub fn new()->Self{
-        CP0::default()
-    }
-
     pub fn power_on_reset(&mut self) {
         self.reg_config.power_on_reset();
     }
@@ -30,6 +26,5 @@ impl CP0 {
 
     pub fn write_status_reg(&mut self, data: u64) {
         self.reg_status.write(data as u32);
-        panic!("Status register write {:#?}", data)
     }
 }

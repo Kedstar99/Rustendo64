@@ -8,6 +8,15 @@ impl Default for TLBGeneralExceptionVectorLocation {
     fn default() -> Self { TLBGeneralExceptionVectorLocation::Normal }
 }
 
+impl From<u32> for TLBGeneralExceptionVectorLocation {
+    fn from(data:u32) -> Self {
+        match data & 0x200000 {
+            0 => TLBGeneralExceptionVectorLocation::Normal,
+            _ => TLBGeneralExceptionVectorLocation::Bootstrap,
+        }
+    }
+}
+
 #[derive(Debug, Default)]
 struct DiagnosticStatus {
     instruction_trace_support: bool, //ITS
@@ -17,23 +26,21 @@ struct DiagnosticStatus {
     condition_bit: bool, //CH
 }
 
-impl DiagnosticStatus {
-    fn write(&mut self, data: u32) {
+impl From<u32> for DiagnosticStatus {
+    fn from(data:u32) -> Self {
         let panic_bit_twenty_three = data & 0x400000 == 1;
         let panic_bit_nineteen = data & 0x40000 == 1;
         if panic_bit_twenty_three || panic_bit_nineteen {
             panic!("Detected anomalie in DiagnosticStatus. Bit 19 or 23 were set when they shouldn't have been. {:#b}", data);
         }
-        
-        self.instruction_trace_support = data & 0x800000 != 0;
-        self.tlb_miss_gpe_vectors = match data & 0x200000 != 0 {
-            true => TLBGeneralExceptionVectorLocation::Bootstrap,
-            false => TLBGeneralExceptionVectorLocation::Normal
-        };
-        self.tlb_shutdown = data & 0x100000 != 0;
-        self.soft_reset_or_nmi_occured = data & 0x80000 != 0;
-        self.condition_bit = data & 0x20000 != 0;
+        DiagnosticStatus {
+            instruction_trace_support: data & 0x800000 != 0,
+            tlb_miss_gpe_vectors: data.into(),
+            tlb_shutdown:  data & 0x100000 != 0,
+            soft_reset_or_nmi_occured: data & 0x80000 != 0,
+            condition_bit: data & 0x20000 != 0
 
+        }
     }
 }
 
@@ -44,14 +51,21 @@ struct InterruptMask {
     software_interrupt_cause_reg: [bool; 2] //IM(1, 0)
 }
 
-impl InterruptMask {
-    fn write(&mut self, data:u32) {
-        self.enabled = data & 0x8000 != 0;
-        for i in (0..5).rev() {
-            self.external_interrupts_or_write_requests[i] = data & (1 << (10 + i)) != 0;
-        }
-        for i in (0..2).rev() {
-            self.software_interrupt_cause_reg[i] = data & (1 << (8 + i)) != 0;
+impl From<u32> for InterruptMask {
+    fn from(data:u32) -> Self {
+        InterruptMask {
+            enabled: data & 0x8000 != 0,
+            external_interrupts_or_write_requests: [
+                data & (1 << 10) != 0,
+                data & (1 << 11) != 0,
+                data & (1 << 12) != 0,
+                data & (1 << 13) != 0,
+                data & (1 << 14) != 0,
+            ],
+            software_interrupt_cause_reg: [
+                data & (1 << 8) != 0,
+                data & (1 << 9) != 0,
+            ]
         }
     }
 }
@@ -64,7 +78,18 @@ enum Mode {
 }
 
 impl Default for Mode {
-    fn default() -> Self {Mode::Kernel}
+    fn default() -> Self {Self::Kernel}
+}
+
+impl From<u32> for Mode {
+    fn from(value:u32) -> Self {
+        match value & 0x18 {
+            0b00000 => Mode::Kernel,
+            0b01000 => Mode::Supervisor,
+            0b10000 => Mode::User,
+            _ => panic!("Unable to determine RegStatus mode")
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -97,18 +122,12 @@ impl RegStatus {
         self.additional_fp_regs = data & 0x04000000 != 0;
 
         self.reverse_endian = data & 0x02000000 != 0;
-
-        self.diagnostic_status.write(data);
-        self.interrupt_mask.write(data);
+        self.diagnostic_status = data.into();
+        self.interrupt_mask = data.into();
         self.kernel_mode_64bit_addr = data & 0x80 != 0;
         self.supervisor_mode_64bit_addr = data & 0x40 !=0;
         self.user_mode_64bit_addr = data & 0x20 != 0;
-        self.mode = match (data & 0x18) >> 3 {
-            0b00 => Mode::Kernel,
-            0b01 => Mode::Supervisor,
-            0b10 => Mode::User,
-            _ => panic!("Unable to determine RegStatus mode")
-        };
+        self.mode = data.into();
         self.error_level = data & 0x4 != 0;
         self.exception_level = data & 0x2 != 0;
         self.global_interrupt = data & 0x1 != 0;
