@@ -1,5 +1,5 @@
-use super::reg_config;
 use super::reg_status;
+use super::reg_config;
 
 // Coprocessor 0
 #[derive(Default, Debug)]
@@ -15,16 +15,10 @@ impl CP0 {
 
     pub fn write_cp0_reg(&mut self, index: u32, data: u64) {
         match index {
-            12 => {
-                //status register
-                self.write_status_reg(data)
-            },
+            12 => {self.reg_status.write(data as u32)},
+            16 => {self.reg_config.write(data as u32)},
 
             _ => panic!("TODO CP0 reg write! {:#?} {:#?}", index, data)
         }
-    }
-
-    pub fn write_status_reg(&mut self, data: u64) {
-        self.reg_status.write(data as u32);
     }
 }

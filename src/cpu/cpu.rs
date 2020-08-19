@@ -1,6 +1,7 @@
 
 use super::super::interconnect;
 use super::cp0;
+use super::instruction as cpu_i;
 
 //see Google drive for CPU spec
 #[derive(Debug)]
@@ -71,21 +72,23 @@ impl Cpu {
     pub fn run_one_instruction(&mut self) {
         let op_word = self.read_word(self.pc);
         let op_code = (op_word >> 26) & 0b111111;
+        let op:cpu_i::CPUI = op_code.into();
+        let rs = (op_word >> 21) & 0b11111;
         let rt = (op_word >> 16) & 0b11111;
-        match op_code {
-            0b001111 => {
-                //LUI
-                let imm = op_word & 0xffff;
+        let imm = op_word & 0xffff;
+        match op {
+            cpu_i::CPUI::ORI => {
+                let res = self.read_gpr(rs as usize) | (imm as u64);
+                self.write_gpr(rt as usize, res)
+            }
+            cpu_i::CPUI::LUI => {
                 self.write_gpr(rt as usize, (imm << 16) as u64)
             },
-            0b010000 => {
-                //MTC0
+            cpu_i::CPUI::MTC0 => {
                 let rd = (op_word >> 11) & 0b11111;
                 let data = self.read_gpr(rt as usize);
                 self.cp0.write_cp0_reg(rd, data)
-            },
-            _ => panic!("Unrecognized Opcode: {:#b}", op_code)
-
+            }
         }
         self.pc += 4;
     }
