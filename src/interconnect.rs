@@ -23,7 +23,7 @@ impl Interconnect {
             // currently reading as big endian
             BigEndian::read_u32(&self.pif_rom[rel_addr as usize..])
         } else {
-            panic!("Unrecognized virtual address: {:#x}", addr)
+            panic!("Unrecognized physical address: {:#x}", addr)
         }
     }
 

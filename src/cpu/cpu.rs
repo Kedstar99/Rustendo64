@@ -82,12 +82,25 @@ impl Cpu {
                 self.write_gpr(rt as usize, res)
             }
             cpu_i::CPUI::LUI => {
-                self.write_gpr(rt as usize, (imm << 16) as u64)
+                let value = ((imm << 16) as i32) as u64;
+                self.write_gpr(rt as usize, value)
             },
             cpu_i::CPUI::MTC0 => {
                 let rd = (op_word >> 11) & 0b11111;
                 let data = self.read_gpr(rt as usize);
                 self.cp0.write_cp0_reg(rd, data)
+            },
+            cpu_i::CPUI::LW => {
+                //TODO: Handle LW TLB Miss Exception, invalid exception , bus error exception, address error excpetion
+                let base = rs;
+                let offset = imm;
+
+                let sign_extended_offset = (offset as i16) as u64;
+                let virt_addr = sign_extended_offset + self.read_gpr(base as usize);
+                let word = self.read_word(virt_addr);
+                let value = (word as i32) as u64;
+                self.write_gpr(rt as usize, value)
+                
             }
         }
         self.pc += 4;
