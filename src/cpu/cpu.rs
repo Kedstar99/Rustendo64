@@ -3,8 +3,9 @@ use super::super::interconnect;
 use super::cp0;
 use super::instruction as cpu_i;
 
+use std::fmt;
+
 //see Google drive for CPU spec
-#[derive(Debug)]
 pub struct Cpu { 
     gpr: [u64; 32],
     fpr: [f64; 32],
@@ -13,10 +14,68 @@ pub struct Cpu {
     low: u64,
     llbit: bool,
     fcr0: u32,
-    fcr32: u32,
+    fcr31: u32,
 
     cp0:cp0::CP0,
     interconnect: interconnect::Interconnect,
+}
+
+impl fmt::Debug for Cpu {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        const NUM_GPR:usize = 32;
+        const REGS_PER_LINE: usize = 2;
+        const REG_NAMES: [&'static str; 32] = [
+        "r0", "at", "v0", "v1", "a0", "a1", "a2", "a3",
+        "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7",
+        "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
+        "t8", "t9", "k0", "k1", "gp", "sp", "s8", "ra",
+        ];
+
+        write!(f,"\nCPU General Purpose Registers:");
+        for reg_num in 0..NUM_GPR {
+            if (reg_num % REGS_PER_LINE) == 0 {
+                writeln!(f,"");
+            }
+            write!(f, 
+                "{reg_name}/gpr{num:02}: {value:#018X} ",
+                num = reg_num,
+                reg_name = REG_NAMES[reg_num],
+                value = self.gpr[reg_num],
+            );
+        }
+
+        write!(f,"\n\nCPU Floating Point Registers:");    
+        for reg_num in 0..NUM_GPR {
+            if (reg_num % REGS_PER_LINE) == 0 {
+                writeln!(f,"");
+            }
+            write!(f, 
+                "fpr{num:02}: {value:21} ",
+                num = reg_num,
+                value = self.fpr[reg_num],);
+        }
+
+        writeln!(f,"\n\nCPU Special Registers:");
+        writeln!(f, 
+            "\
+            reg_pc: {:#018X}\n\
+            reg_hi: {:#018X}\n\
+            reg_lo: {:#018X}\n\
+            reg_llbit: {}\n\
+            reg_fcr0:  {:#010X}\n\
+            reg_fcr31: {:#010X}\n\
+            ", 
+            self.pc, 
+            self.high, 
+            self.low, 
+            self.llbit,
+            self.fcr0,
+            self.fcr31
+        );
+
+        writeln!(f, "{:#?}", self.cp0);
+        writeln!(f, "{:#?}", self.interconnect)
+    }
 }
 
 impl Cpu {
@@ -29,7 +88,7 @@ impl Cpu {
             low: 0,
             llbit: false,
             fcr0: 0,
-            fcr32: 0,
+            fcr31: 0,
 
             cp0: cp0::CP0::default(),
             interconnect: interconnect,
