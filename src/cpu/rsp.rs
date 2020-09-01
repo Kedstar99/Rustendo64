@@ -17,6 +17,6 @@ impl RSP {
     }
 
     fn read_status_register(&self) -> u32 {
-        panic!("Not implemented yet!")
+        0 //TODO properly emulate RSP
     }
 }

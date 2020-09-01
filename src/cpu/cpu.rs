@@ -124,10 +124,14 @@ impl Cpu {
         let rt = (op_word >> 16) & 0b11111;
         let imm = op_word & 0xffff;
         match op {
+            cpu_i::CPUI::ANDI => {
+                let res = self.read_gpr(rs as usize) & (imm as u64);
+                self.write_gpr(rt as usize, res)
+            },
             cpu_i::CPUI::ORI => {
                 let res = self.read_gpr(rs as usize) | (imm as u64);
                 self.write_gpr(rt as usize, res)
-            }
+            },
             cpu_i::CPUI::LUI => {
                 let value = ((imm << 16) as i32) as u64;
                 self.write_gpr(rt as usize, value)
