@@ -1,9 +1,7 @@
 use super::mem_map as mm;
 
 #[derive(Default, Debug)]
-pub struct RSP{
-
-}
+pub struct RSP;
 
 impl RSP {
     pub fn read_sp_reg(&self, addr:u32)->u32{

@@ -123,6 +123,7 @@ impl Cpu {
         let rs = (op_word >> 21) & 0b11111;
         let rt = (op_word >> 16) & 0b11111;
         let imm = op_word & 0xffff;
+        let offset = imm;
         match op {
             cpu_i::CPUI::ANDI => {
                 let res = self.read_gpr(rs as usize) & (imm as u64);
@@ -141,11 +142,18 @@ impl Cpu {
                 let data = self.read_gpr(rt as usize);
                 self.cp0.write_cp0_reg(rd, data)
             }
+            cpu_i::CPUI::BEQL => {
+                let branch = self.read_gpr(rs as usize) == self.read_gpr(rt as usize);
+                if branch {
+                    let sign_extended_offset = ((offset as i16) as u64);
+                    let sign_extended_offset = sign_extended_offset.wrapping_shl(2);
+                    self.pc = self.pc.wrapping_add(sign_extended_offset);
+                    self.run_one_instruction();
+                }
+            },
             cpu_i::CPUI::LW => {
                 //TODO: Handle LW TLB Miss Exception, invalid exception , bus error exception, address error excpetion
                 let base = rs;
-                let offset = imm;
-
                 let sign_extended_offset = (offset as i16) as u64;
                 let virt_addr = sign_extended_offset.wrapping_add(self.read_gpr(base as usize));
                 let word = self.read_word(virt_addr);
