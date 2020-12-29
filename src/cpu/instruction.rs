@@ -21,3 +21,42 @@ impl From<u32> for CPUI {
         }
     }
 }
+
+pub struct Instruction {
+    op_word:u32
+}
+
+impl Instruction {
+
+    pub fn opcode(&self) -> CPUI {
+        ((self.op_word >> 26) & 0b111111).into()
+    }
+
+    pub fn rs(&self) -> u32 {
+        (self.op_word >> 21) & 0b11111
+    }
+
+    pub fn rt(&self) -> u32 {
+        (self.op_word >> 16) & 0b11111
+    }
+
+    pub fn imm(&self) -> u32 {
+        self.op_word & 0xffff
+    }
+
+    pub fn offset(&self) -> u32 {
+        self.imm()
+    }
+
+    pub fn base(&self) -> u32 {
+        self.rs()
+    }
+}
+
+impl From<u32> for Instruction {
+    fn from(data:u32) -> Self {
+        Instruction {
+            op_word: data
+        }
+    }
+}

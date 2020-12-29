@@ -118,34 +118,30 @@ impl Cpu {
 
     pub fn run_one_instruction(&mut self) {
         let op_word = self.read_word(self.pc);
-        let op_code = (op_word >> 26) & 0b111111;
-        let op: cpu_i::CPUI = op_code.into();
-        let rs = (op_word >> 21) & 0b11111;
-        let rt = (op_word >> 16) & 0b11111;
-        let imm = op_word & 0xffff;
-        let offset = imm;
-        match op {
+        let instruction: cpu_i::Instruction = op_word.into();
+
+        match instruction.opcode() {
             cpu_i::CPUI::ANDI => {
-                let res = self.read_gpr(rs as usize) & (imm as u64);
-                self.write_gpr(rt as usize, res)
+                let res = self.read_gpr(instruction.rs() as usize) & (instruction.imm() as u64);
+                self.write_gpr(instruction.rt() as usize, res)
             },
             cpu_i::CPUI::ORI => {
-                let res = self.read_gpr(rs as usize) | (imm as u64);
-                self.write_gpr(rt as usize, res)
+                let res = self.read_gpr(instruction.rs() as usize) | (instruction.imm() as u64);
+                self.write_gpr(instruction.rt() as usize, res)
             },
             cpu_i::CPUI::LUI => {
-                let value = ((imm << 16) as i32) as u64;
-                self.write_gpr(rt as usize, value)
+                let value = ((instruction.imm() << 16) as i32) as u64;
+                self.write_gpr(instruction.rt() as usize, value)
             }
             cpu_i::CPUI::MTC0 => {
                 let rd = (op_word >> 11) & 0b11111;
-                let data = self.read_gpr(rt as usize);
+                let data = self.read_gpr(instruction.rt() as usize);
                 self.cp0.write_cp0_reg(rd, data)
             }
             cpu_i::CPUI::BEQL => {
-                let branch = self.read_gpr(rs as usize) == self.read_gpr(rt as usize);
+                let branch = self.read_gpr(instruction.rs() as usize) == self.read_gpr(instruction.rt() as usize);
                 if branch {
-                    let sign_extended_offset = ((offset as i16) as u64);
+                    let sign_extended_offset = (instruction.offset() as i16) as u64;
                     let sign_extended_offset = sign_extended_offset.wrapping_shl(2);
                     self.pc = self.pc.wrapping_add(sign_extended_offset);
                     self.run_one_instruction();
@@ -153,12 +149,11 @@ impl Cpu {
             },
             cpu_i::CPUI::LW => {
                 //TODO: Handle LW TLB Miss Exception, invalid exception , bus error exception, address error excpetion
-                let base = rs;
-                let sign_extended_offset = (offset as i16) as u64;
-                let virt_addr = sign_extended_offset.wrapping_add(self.read_gpr(base as usize));
+                let sign_extended_offset = (instruction.offset() as i16) as u64;
+                let virt_addr = sign_extended_offset.wrapping_add(self.read_gpr(instruction.base() as usize));
                 let word = self.read_word(virt_addr);
                 let value = (word as i32) as u64;
-                self.write_gpr(rt as usize, value)
+                self.write_gpr(instruction.rt() as usize, value)
             }
         }
         self.pc += 4;
