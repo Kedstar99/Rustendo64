@@ -40,12 +40,20 @@ impl Instruction {
         (self.op_word >> 16) & 0b11111
     }
 
+    pub fn rd(&self) -> u32 {
+        (self.op_word >> 11) & 0b11111
+    }
+
     pub fn imm(&self) -> u32 {
         self.op_word & 0xffff
     }
 
     pub fn offset(&self) -> u32 {
         self.imm()
+    }
+
+    pub fn sign_extended_offset(&self) -> u64 {
+        (self.offset() as i16) as u64
     }
 
     pub fn base(&self) -> u32 {
