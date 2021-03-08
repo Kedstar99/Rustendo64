@@ -119,6 +119,7 @@ impl Cpu {
     pub fn run_one_instruction(&mut self) {
         let op_word = self.read_word(self.pc);
         let instruction: cpu_i::Instruction = op_word.into();
+        println!("instruction: {}", instruction);
 
         match instruction.opcode() {
             cpu_i::CPUI::ANDI => {

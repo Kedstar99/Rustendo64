@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Debug)]
 pub enum CPUI {
     BEQL,
@@ -6,6 +8,21 @@ pub enum CPUI {
     LUI,
     MTC0,
     LW,
+}
+
+impl ToString for CPUI {
+    fn to_string(&self) -> String {
+        let result = match self {
+            CPUI::ORI => "ORI",
+            CPUI::LUI => "LUI",
+            CPUI::ANDI => "ANDI",
+            CPUI::MTC0 => "MTC0",
+            CPUI::BEQL => "BEQL",
+            CPUI::LW => "LW",
+            _ => panic!("Unrecognized OP")
+        };
+        result.to_string()
+    }
 }
 
 impl From<u32> for CPUI {
@@ -66,5 +83,11 @@ impl From<u32> for Instruction {
         Instruction {
             op_word: data
         }
+    }
+}
+
+impl fmt::Display for Instruction {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self.opcode().to_string())
     }
 }

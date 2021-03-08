@@ -25,7 +25,6 @@ fn main() {
     let mut n64 = n64::N64::new(pif_buf);
     n64.power_on_reset();
     loop{
-        println!("N64: {:#?}", &n64);
         n64.run_one_instruction();
 
     }
