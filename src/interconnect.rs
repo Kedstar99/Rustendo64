@@ -37,6 +37,10 @@ impl Interconnect {
         }
     }
 
+    pub fn write_word(&mut self, addr: u32, data:u64) {
+        panic!("TODO!");
+    }
+
 }
 
 impl fmt::Debug for Interconnect {

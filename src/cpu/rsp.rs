@@ -15,6 +15,6 @@ impl RSP {
     }
 
     fn read_status_register(&self) -> u32 {
-        0 //TODO properly emulate RSP
+        1 //TODO properly emulate RSP
     }
 }
