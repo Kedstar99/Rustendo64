@@ -121,6 +121,7 @@ impl Cpu {
         let instruction: cpu_i::Instruction = op_word.into();
         println!("instruction: {}", instruction);
 
+        self.pc += 4;
         match instruction.opcode() {
             cpu_i::CPUI::ANDI => {
                 let res = self.read_gpr(instruction.rs() as usize) & (instruction.imm() as u64);
@@ -154,7 +155,6 @@ impl Cpu {
                 self.write_gpr(instruction.rt() as usize, value)
             }
         }
-        self.pc += 4;
     }
 
     fn write_gpr(&mut self, index: usize, value: u64) {
