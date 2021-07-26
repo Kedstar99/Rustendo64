@@ -104,6 +104,11 @@ impl Cpu {
         self.interconnect.read_word(phys_addr as u32)
     }
 
+    fn write_word(&mut self, virt_addr: u64, data: u64) {
+        let phys_addr = self.virt_phys_addr_mapping(virt_addr);
+        self.interconnect.write_word(phys_addr as u32, data)
+    }
+
     fn virt_phys_addr_mapping(&self, virt_addr: u64) -> u64 {
         // see table 5-3 of processor VR4300 user manual
         let addr_bit_values = (virt_addr >> 29) & 0b111;
@@ -117,44 +122,72 @@ impl Cpu {
     }
 
     pub fn run_one_instruction(&mut self) {
-        let op_word = self.read_word(self.pc);
-        let instruction: cpu_i::Instruction = op_word.into();
+        let instruction = self.read_instr(self.pc);
         println!("instruction: {}", instruction);
-
+        self.pc += 4;
+        self.execute_instr(instruction);
+    }
+    
+    fn execute_instr(&mut self, instruction:cpu_i::Instruction) {        
         match instruction.opcode() {
             cpu_i::CPUI::ANDI => {
-                let res = self.read_gpr(instruction.rs() as usize) & (instruction.imm() as u64);
-                self.write_gpr(instruction.rt() as usize, res)
+                let res = self.read_gpr(instruction.rs()) & instruction.imm() as u64;
+                self.write_gpr(instruction.rt(), res)
             },
             cpu_i::CPUI::ORI => {
-                let res = self.read_gpr(instruction.rs() as usize) | (instruction.imm() as u64);
-                self.write_gpr(instruction.rt() as usize, res)
+                let res = self.read_gpr(instruction.rs()) | instruction.imm() as u64;
+                self.write_gpr(instruction.rt(), res)
+            },
+            cpu_i::CPUI::ADDI => {
+                let res = self.read_gpr(instruction.rs()) + instruction.sign_extended_imm();
+                self.write_gpr(instruction.rt(), res)
+            }
+            cpu_i::CPUI::ADDIU => {
+                let res = self.read_gpr(instruction.rs()).wrapping_add(instruction.sign_extended_imm());
+                self.write_gpr(instruction.rt(), res)
             },
             cpu_i::CPUI::LUI => {
                 let value = ((instruction.imm() << 16) as i32) as u64;
-                self.write_gpr(instruction.rt() as usize, value)
+                self.write_gpr(instruction.rt(), value)
             }
             cpu_i::CPUI::MTC0 => {
-                let data = self.read_gpr(instruction.rt() as usize);
+                let data = self.read_gpr(instruction.rt());
                 self.cp0.write_cp0_reg(instruction.rd(), data)
             }
             cpu_i::CPUI::BEQL => {
-                let branch = self.read_gpr(instruction.rs() as usize) == self.read_gpr(instruction.rt() as usize);
+                let branch = self.read_gpr(instruction.rs()) == self.read_gpr(instruction.rt());
                 if branch {
+<<<<<<< HEAD
                     let sign_extended_offset = instruction.sign_extended_offset() << 2;
+=======
+                    let old_pc = self.pc;
+                    let sign_extended_offset = instruction.sign_extended_offset().wrapping_shl(2);
+>>>>>>> de01decefb31eb53a500c529d28184f4c18415f3
                     self.pc = self.pc.wrapping_add(sign_extended_offset);
-                    self.run_one_instruction();
+                    let delay_slot_instr = self.read_instr(old_pc);
+                    self.execute_instr(delay_slot_instr);
+                } else {
+                    self.pc = self.pc.wrapping_add(4)
                 }
             },
             cpu_i::CPUI::LW => {
                 //TODO: Handle LW TLB Miss Exception, invalid exception , bus error exception, address error excpetion
-                let virt_addr = instruction.sign_extended_offset().wrapping_add(self.read_gpr(instruction.base() as usize));
+                let virt_addr = instruction.sign_extended_offset().wrapping_add(self.read_gpr(instruction.base()));
                 let word = self.read_word(virt_addr);
                 let value = (word as i32) as u64;
-                self.write_gpr(instruction.rt() as usize, value)
+                self.write_gpr(instruction.rt(), value)
+            },
+            cpu_i::CPUI::SW => {
+                let virt_addr = instruction.sign_extended_offset().wrapping_add(self.read_gpr(instruction.base() ));
+                let data = self.read_gpr(instruction.rt());
+                self.write_word(virt_addr, data)
             }
         }
-        self.pc += 4;
+    }
+
+    fn read_instr(&self, pc: u64) -> cpu_i::Instruction {
+        let op_word = self.read_word(pc);
+        op_word.into()
     }
 
     fn write_gpr(&mut self, index: usize, value: u64) {
