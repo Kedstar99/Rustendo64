@@ -30,9 +30,9 @@ fn main() {
     }
 }
 
-fn load_bin<P: AsRef<Path>>(path: P) -> Vec<u8> {
+fn load_bin<P: AsRef<Path>>(path: P) -> Box<[u8]> {
     let mut file = fs::File::open(path.as_ref()).unwrap();
     let mut file_buf = Vec::new();
     file.read_to_end(&mut file_buf).unwrap();
-    file_buf
+    file_buf.into_boxed_slice()
 }
