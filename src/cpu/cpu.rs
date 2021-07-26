@@ -157,12 +157,8 @@ impl Cpu {
             cpu_i::CPUI::BEQL => {
                 let branch = self.read_gpr(instruction.rs()) == self.read_gpr(instruction.rt());
                 if branch {
-<<<<<<< HEAD
-                    let sign_extended_offset = instruction.sign_extended_offset() << 2;
-=======
                     let old_pc = self.pc;
-                    let sign_extended_offset = instruction.sign_extended_offset().wrapping_shl(2);
->>>>>>> de01decefb31eb53a500c529d28184f4c18415f3
+                    let sign_extended_offset = instruction.sign_extended_offset() << 2;
                     self.pc = self.pc.wrapping_add(sign_extended_offset);
                     let delay_slot_instr = self.read_instr(old_pc);
                     self.execute_instr(delay_slot_instr);
