@@ -141,7 +141,7 @@ impl Cpu {
             cpu_i::CPUI::BEQL => {
                 let branch = self.read_gpr(instruction.rs() as usize) == self.read_gpr(instruction.rt() as usize);
                 if branch {
-                    let sign_extended_offset = instruction.sign_extended_offset().wrapping_shl(2);
+                    let sign_extended_offset = instruction.sign_extended_offset() << 2;
                     self.pc = self.pc.wrapping_add(sign_extended_offset);
                     self.run_one_instruction();
                 }
