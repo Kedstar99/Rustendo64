@@ -23,7 +23,6 @@ fn main() {
     let pif_buf = load_bin(Path::new(pif_path));
 
     let mut n64 = n64::N64::new(pif_buf);
-    n64.power_on_reset();
     loop{
         n64.run_one_instruction();
 

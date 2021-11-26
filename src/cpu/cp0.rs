@@ -9,10 +9,6 @@ pub struct CP0 {
 }
 
 impl CP0 {
-    pub fn power_on_reset(&mut self) {
-        self.reg_config.power_on_reset();
-    }
-
     pub fn write_cp0_reg(&mut self, index: u32, data: u64) {
         match index {
             12 => {self.reg_status = (data as u32).into()},

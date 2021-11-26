@@ -74,7 +74,7 @@ impl Cpu {
         Cpu {
             gpr: [0; 32],
             fpr: [0.0; 32],
-            pc: 0,
+            pc: 0xffff_ffff_bfc0_0000,
             high: 0,
             low: 0,
             llbit: false,
@@ -84,13 +84,6 @@ impl Cpu {
             cp0: cp0::CP0::default(),
             interconnect: interconnect,
         }
-    }
-
-    pub fn power_on_reset(&mut self) {
-        self.cp0.power_on_reset();
-
-        //This value comes from n64maps.txt see tag 01 in my google doc for details.
-        self.pc = 0xffff_ffff_bfc0_0000;
     }
 
     pub fn run(&mut self) {

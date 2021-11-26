@@ -104,16 +104,6 @@ pub struct RegConfig {
 
 }
 
-impl RegConfig {
-    pub fn power_on_reset(&mut self) {
-        self.operating_frequency_ratio = OperatingFrequencyRatio::OneTwo;
-        self.transfer_data_pattern = TransferDataPattern::D;
-        self.endian_mem = EndianMemory::Big;
-        self.cu_bit = false;
-        self.coherency_algo_of_kseg0 = true; //if this is false, than the coherency cache isn't used
-    }
-}
-
 impl From<u32> for RegConfig{
     fn from(data:u32) -> Self {
         
@@ -132,7 +122,7 @@ impl From<u32> for RegConfig{
             transfer_data_pattern: data.into(),
             endian_mem: data.into(),
             cu_bit: data & (1 << 3) != 0,
-            coherency_algo_of_kseg0: (data & 0b111) != 2,
+            coherency_algo_of_kseg0: (data & 0b111) != 2,  //if this is false, than the coherency cache isn't used
 
         }
         
