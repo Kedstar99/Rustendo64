@@ -6,6 +6,11 @@ use super::cpu::rsp as rsp;
 
 const RAM_SIZE: usize = 4 * 1024 * 1024;
 
+enum Addr {
+    PifRom(u32),
+    SpStatusReg,
+
+}
 
 pub struct Interconnect {
     pif_rom: Box<[u8]>,
@@ -23,22 +28,25 @@ impl Interconnect {
     }
 
     pub fn read_word(&self, addr:u32) -> u32 {
-        match addr {
-            mm::PIF_ROM_START..=mm::PIF_ROM_END => {
-                let rel_addr = addr - mm::PIF_ROM_START;
-                // TODO check endiannness (replace with burntsushi byteorder)
-                // currently reading as big endian
-                return BigEndian::read_u32(&self.pif_rom[rel_addr as usize..])
-            },
-            mm::SP_BASE_REG_START..=mm::SP_STATUS_REG_END => {
-                self.rsp.read_sp_reg(addr)
-            },
-            _ => panic!("Unrecognized physical address: {:#x}", addr)
+        match self.mem_map(addr) {
+            Addr::PifRom(offset) => BigEndian::read_u32(&self.pif_rom[offset as usize..]),
+            Addr::SpStatusReg => self.rsp.read_sp_reg(addr),
         }
     }
-
-    pub fn write_word(&mut self, addr: u32, data:u64) {
-        panic!("TODO!");
+    
+    pub fn write_word(&mut self, addr: u32, data:u32) {
+        match self.mem_map(addr) {
+            Addr::PifRom(_) => panic!("Cannot write to PIF ROM"),
+            Addr::SpStatusReg => self.rsp.write_sp_reg(data),
+        }
+    }
+    
+    fn mem_map(&self, addr: u32) -> Addr {
+        match addr {
+            mm::PIF_ROM_START..=mm::PIF_ROM_END =>  Addr::PifRom(addr - mm::PIF_ROM_START),
+            mm::SP_BASE_REG_START..=mm::SP_STATUS_REG_END => Addr::SpStatusReg,
+            _ => panic!("Unrecognized physical address: {:#x}", addr)
+        }
     }
 
 }

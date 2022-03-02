@@ -14,6 +14,10 @@ impl RSP {
     
     }
 
+    pub fn write_sp_reg(&mut self, data:u32) {
+        panic!("Write to RSP status reg! {:?}", data);
+    }
+
     fn read_status_register(&self) -> u32 {
         1 //TODO properly emulate RSP
     }

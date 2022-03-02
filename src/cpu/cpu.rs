@@ -97,7 +97,7 @@ impl Cpu {
         self.interconnect.read_word(phys_addr as u32)
     }
 
-    fn write_word(&mut self, virt_addr: u64, data: u64) {
+    fn write_word(&mut self, virt_addr: u64, data: u32) {
         let phys_addr = self.virt_phys_addr_mapping(virt_addr);
         self.interconnect.write_word(phys_addr as u32, data)
     }
@@ -168,7 +168,7 @@ impl Cpu {
             },
             cpu_i::CPUI::SW => {
                 let virt_addr = instruction.sign_extended_offset().wrapping_add(self.read_gpr(instruction.base() ));
-                let data = self.read_gpr(instruction.rt());
+                let data = self.read_gpr(instruction.rt()) as u32;
                 self.write_word(virt_addr, data)
             }
         }
