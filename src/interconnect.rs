@@ -23,7 +23,7 @@ impl Interconnect {
         Interconnect{
             pif_rom: pif_rom,
             ram: vec![0; RAM_SIZE].into_boxed_slice(),
-            rsp: rsp::RSP::default()
+            rsp: rsp::RSP::new()
         }
     }
 
