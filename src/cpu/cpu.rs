@@ -120,6 +120,21 @@ impl Cpu {
         self.pc += 4;
         self.execute_instr(instruction);
     }
+
+    #[inline(always)]
+    fn branch<F>(&mut self, instruction:&cpu_i::Instruction, f:F) where F: Fn(u64, u64) -> bool {
+        let rs = self.read_gpr(instruction.rs());
+        let rt = self.read_gpr(instruction.rt());
+        if f(rs, rt) {
+            let old_pc = self.pc;
+            let sign_extended_offset = instruction.sign_extended_offset() << 2;
+            self.pc = self.pc.wrapping_add(sign_extended_offset);
+            let delay_slot_instr = self.read_instr(old_pc);
+            self.execute_instr(delay_slot_instr);
+        } else {
+            self.pc = self.pc.wrapping_add(4)
+        }
+    }
     
     fn execute_instr(&mut self, instruction:cpu_i::Instruction) {        
         match instruction.opcode() {
@@ -134,7 +149,7 @@ impl Cpu {
             cpu_i::CPUI::ADDI => {
                 let res = self.read_gpr(instruction.rs()) + instruction.sign_extended_imm();
                 self.write_gpr(instruction.rt(), res)
-            }
+            },
             cpu_i::CPUI::ADDIU => {
                 let res = self.read_gpr(instruction.rs()).wrapping_add(instruction.sign_extended_imm());
                 self.write_gpr(instruction.rt(), res)
@@ -142,23 +157,13 @@ impl Cpu {
             cpu_i::CPUI::LUI => {
                 let value = ((instruction.imm() << 16) as i32) as u64;
                 self.write_gpr(instruction.rt(), value)
-            }
+            },
             cpu_i::CPUI::MTC0 => {
                 let data = self.read_gpr(instruction.rt());
                 self.cp0.write_cp0_reg(instruction.rd(), data)
-            }
-            cpu_i::CPUI::BEQL => {
-                let branch = self.read_gpr(instruction.rs()) == self.read_gpr(instruction.rt());
-                if branch {
-                    let old_pc = self.pc;
-                    let sign_extended_offset = instruction.sign_extended_offset() << 2;
-                    self.pc = self.pc.wrapping_add(sign_extended_offset);
-                    let delay_slot_instr = self.read_instr(old_pc);
-                    self.execute_instr(delay_slot_instr);
-                } else {
-                    self.pc = self.pc.wrapping_add(4)
-                }
             },
+            cpu_i::CPUI::BEQL => self.branch(&instruction, |rs, rt| rs == rt),
+            cpu_i::CPUI::BNEL => self.branch(&instruction, |rs, rt| rs != rt),
             cpu_i::CPUI::LW => {
                 //TODO: Handle LW TLB Miss Exception, invalid exception , bus error exception, address error excpetion
                 let virt_addr = instruction.sign_extended_offset().wrapping_add(self.read_gpr(instruction.base()));
