@@ -7,3 +7,5 @@ pub const SP_BASE_REG_END:u32 = 0x0400FFFF;
 
 pub const SP_STATUS_REG_START:u32 = 0x4040010;
 pub const SP_STATUS_REG_END:u32 = 0x4040013;
+
+pub const SP_DMA_BUSY_REG:u32 = 0x4040018;

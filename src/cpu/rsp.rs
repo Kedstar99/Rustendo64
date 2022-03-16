@@ -30,6 +30,14 @@ impl RSP {
     
     }
 
+    pub fn read_dma_busy_reg(&self) -> u32 {
+        0
+    }
+
+    pub fn write_dma_busy_reg(&mut self, data:u32) {
+        unimplemented!("not implemented write dma busy reg!");
+    }
+
     pub fn write_sp_reg(&mut self, data:u32) {
        for i in 0..=24 {
            match data & (1 << i) {
