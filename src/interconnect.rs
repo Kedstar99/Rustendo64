@@ -6,12 +6,6 @@ use super::cpu::rsp as rsp;
 
 const RAM_SIZE: usize = 4 * 1024 * 1024;
 
-enum Addr {
-    PifRom(u32),
-    SpStatusReg,
-    SpDMABusyReg,
-}
-
 pub struct Interconnect {
     pif_rom: Box<[u8]>,
     ram: Box<[u16]>,
@@ -28,30 +22,23 @@ impl Interconnect {
     }
 
     pub fn read_word(&self, addr:u32) -> u32 {
-        match self.mem_map(addr) {
-            Addr::PifRom(offset) => BigEndian::read_u32(&self.pif_rom[offset as usize..]),
-            Addr::SpStatusReg => self.rsp.read_sp_reg(addr),
-            Addr::SpDMABusyReg => self.rsp.read_dma_busy_reg(),
+        match mm::mem_map(addr) {
+            mm::Addr::PifRom(offset) => BigEndian::read_u32(&self.pif_rom[offset as usize..]),
+            mm::Addr::SpStatusReg => self.rsp.read_sp_reg(addr),
+            mm::Addr::SpDMABusyReg => self.rsp.read_dma_busy_reg(),
+            mm::Addr::PiStatusReg => unimplemented!("Handle pi status reg!")
         }
     }
     
     pub fn write_word(&mut self, addr: u32, data:u32) {
-        match self.mem_map(addr) {
-            Addr::PifRom(_) => panic!("Cannot write to PIF ROM"),
-            Addr::SpStatusReg => self.rsp.write_sp_reg(data),
-            Addr::SpDMABusyReg => self.rsp.write_dma_busy_reg(data),
+        match mm::mem_map(addr) {
+            mm::Addr::PifRom(_) => panic!("Cannot write to PIF ROM"),
+            mm::Addr::SpStatusReg => self.rsp.write_sp_reg(data),
+            mm::Addr::SpDMABusyReg => self.rsp.write_dma_busy_reg(data),
+            mm::Addr::PiStatusReg => unimplemented!("Handle pi status reg!")
         }
     }
     
-    fn mem_map(&self, addr: u32) -> Addr {
-        match addr {
-            mm::PIF_ROM_START..=mm::PIF_ROM_END =>  Addr::PifRom(addr - mm::PIF_ROM_START),
-            mm::SP_BASE_REG_START..=mm::SP_STATUS_REG_END => Addr::SpStatusReg,
-            mm::SP_DMA_BUSY_REG =>  Addr::SpDMABusyReg,
-            _ => panic!("Unrecognized physical address: {:#x}", addr)
-        }
-    }
-
 }
 
 impl fmt::Debug for Interconnect {
